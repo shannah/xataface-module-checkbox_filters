@@ -26,12 +26,16 @@ class modules_checkbox_filters {
 	}
 	
 	
-	function block__before_left_column(){
+	function block__after_left_column(){
 	
 		return $this->block__checkbox_filters();
 		
 	}
 
+	
+	function block__aftee2_left_column($params=array()){
+		return $this->block__checkbox_filters($params=array());
+	}
 	
 	function block__checkbox_filters(){
 		
@@ -62,7 +66,7 @@ class modules_checkbox_filters {
 			$ct->addPath(dirname(__FILE__).'/css', $this->getBaseURL().'/css');
 			
 			// Add our javascript
-			//$jt->import('xataface/modules/checkbox_filters/checkbox_filters.js');
+			$jt->import('xataface/modules/checkbox_filters/checkbox_filters.js');
 		
 		}
 		
@@ -100,7 +104,14 @@ class modules_checkbox_filters {
 			echo '<div data-xf-checkbox-filter-field="'.htmlspecialchars($col).'" class="xf-checkbox-filters xf-checkbox-filters-'.htmlspecialchars($col).'">';
 			echo '<h3>Filter by '.htmlspecialchars($field['widget']['label']).'</h3>';
 			echo '<ul>';
+			$dummyRecord = new Dataface_Record($table->tablename, array());
+			$del = $table->getDelegate();
+			$getColorExists = (isset($del) and method_exists($del, 'getColor'));
+			$getBgColorExists = (isset($del) and method_exists($del, 'getBgColor'));
+			
 			foreach ($res as $row){
+				$dummyRecord->setValue($col, $row[$col]);
+				
 				if ( isset($vocab) and isset($vocab[$row[$col]]) ){
 					$val = $vocab[$row[$col]];
 				} else {
@@ -109,11 +120,30 @@ class modules_checkbox_filters {
 				
 				if ( in_array($row[$col], $queryColVal) ) $selected = ' checked';
 				else $selected = '';
-				echo '<li class="xf-checkbox-filter xf-checkbox-filter-'.htmlspecialchars($row[$col]).'"><input type="checkbox" value="'.htmlspecialchars($row[$col]).'"'.$selected.'>'.htmlspecialchars($val).' ('.$row['num'].')</li>';
+				
+				$color = null;
+				$bgColor = null;
+				
+				if ( $getColorExists ){
+					$color = $del->getColor($dummyRecord);
+				}
+				if ( $getBgColorExists ){
+					$bgColor = $del->getBgColor($dummyRecord);
+				}	
+				
+				$style = '';
+				if ( $color ){
+					$style.= 'color: '.$color.'; ';
+				}
+				if ( $bgColor ){
+					$style .= 'background-color: '.$bgColor.';';
+				}
+				echo '<li style="'.$style.'" class="xf-checkbox-filter xf-checkbox-filter-'.htmlspecialchars($row[$col]).'"><input type="checkbox" value="'.htmlspecialchars($row[$col]).'"'.$selected.'>'.htmlspecialchars($val).' ('.$row['num'].')</li>';
 				
 			}
 			echo '</ul>';
-			echo '<button>Refresh Results</button>';
+			echo '<button>Refresh</button>';
+			echo '<div style="clear:both">&nbsp;</div>';
 			echo '</div>';
 			
 		}
